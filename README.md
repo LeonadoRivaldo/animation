@@ -8,3 +8,7 @@
 - Expiration Date: This certification does not expire
 - [Certification](https://www.coursera.org/account/accomplishments/certificate/ERJNN6KNE8AS)
 - [Course URL](https://www.coursera.org/projects/javascript-animation)
+
+To see the hero exercises go to
+
+- [hero](https://leonadorivaldo.github.io/animation/hero/hero.html)

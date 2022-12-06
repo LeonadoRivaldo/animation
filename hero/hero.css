@@ -1,84 +1,105 @@
 body {
-    background-color: #a3d5d3;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+  background-color: #a3d5d3;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 #game {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    overflow: hidden;
-    height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  height: 100%;
 }
 #win {
-    display: none;
+  display: none;
 }
 #win.show {
-    display: block;
+  display: block;
 }
 #hero {
-    /* position: absolute; */
-    /* top: 10px; */
-    /* left: 10px; */
-    height: 600px;
+  /* position: absolute; */
+  /* top: 10px; */
+  /* left: 10px; */
+  height: 600px;
 }
 #villain {
-    /* position: absolute; */
-    /* top: 90px; */
-    /* left: 800px; */
-    height: 600px;
+  /* position: absolute; */
+  /* top: 90px; */
+  /* left: 800px; */
+  height: 600px;
 }
-#lightning {
-    position: absolute;
-    top: 50%;
-    left: 330px;
-    width: 120px;
-    transition: opacity 0.5s ease;
-    z-index: 1;
-    transform: translateY(35px);
+#power {
+  position: absolute;
+  top: 50%;
+  left: 330px;
+  width: 120px;
+  transition: opacity 0.5s ease;
+  z-index: 1;
+  transform: translateY(-10%);
+  height: 120px;
 }
 #boom {
-    position: absolute;
-    right: -40px;
-    width: 570px;
-    top: 150px;
-    transform: rotate(-35deg);
-    opacity: 0;
+  position: absolute;
+  right: -40px;
+  width: 570px;
+  top: 150px;
+  transform: rotate(-35deg);
+  opacity: 0;
 }
 .hide {
-    opacity: 0;
-    visibility: hidden;
+  opacity: 0;
+  visibility: hidden;
 }
 .show {
-    opacity: 1;
-    visibility: visible;
+  opacity: 1;
+  visibility: visible;
 }
 #hero-container {
-    display: flex;
-    position: relative;
-    justify-content: center;
-    width: 492px;
-    flex-wrap: wrap;
+  display: flex;
+  position: relative;
+  justify-content: center;
+  width: 492px;
+  flex-wrap: wrap;
 }
 #villain-container {
-    position: relative;
-    margin-right: 50px;
+  position: relative;
+  margin-right: 50px;
 }
-.btn {
-    border: 0;
-    width: 90px;
-    height: 50px;
-    border-radius: 5px;
-    background: #fff;
-    margin-top: -10px;
-    cursor: pointer;
-    padding: 0 10px;
+.btn-action {
+  display: block;
+  border: 0;
+  width: 90px;
+  height: 50px;
+  border-radius: 5px;
+  background: #fff;
+  margin-top: -10px;
+  cursor: pointer;
+  padding: 0 10px;
+  margin-left: 5px;
 }
-.btn:hover {
-    background-color: royalblue;
+.btn-action:hover {
+  background-color: royalblue;
 }
-.btn img {
-    width: 100%;
-    height: 100%;
+.btn-action img {
+  width: 100%;
+  height: 100%;
+}
+
+#hero-atcks {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+#hero-status-display {
+  position: absolute;
+  right: 0;
+  top: 25%;
+  transform: translate(87%, -50%);
+}
+#hero-status-display .icon {
+  height: 20px;
+  width: 20px;
 }

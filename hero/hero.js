@@ -1,13 +1,45 @@
 //Setup website here
 let hero = document.querySelector("#hero");
 let villain = document.querySelector("#villain");
-let lightning = document.querySelector("#lightning");
-let boom = document.querySelector("#boom");
+let power = document.querySelector("#power");
+let powerHitImg = document.querySelector("#boom");
 let villainHp = document.querySelector("#villain-container .hp-bar");
 let villainContainer = document.querySelector("#villain-container");
 let win = document.querySelector("#win");
 let dmg = document.querySelector("#dmg-done");
 let heroBar = document.querySelector("#hero-atcks");
+let heroStatus = document.querySelector("#hero-status");
+let heroStatusDisplay = document.querySelector("#hero-status-display");
+
+heroStatusDisplay.toggle = function () {
+    !this.classList.contains('show') ? !this.classList.add('show') : !this.classList.remove('show');
+}
+
+const labels = {
+    str: 'STR',
+    dex: 'DEX',
+    con: 'CON',
+    xp: 'XP',
+    lvl: 'Level',
+    actions: 'Powers'
+}
+const heroObject = {
+    name: 'Redhead Wich',
+    str: 2,
+    dex: 1,
+    con: 1,
+    xp: 1,
+    lvl: 1,
+    actions: [
+        { id: 'lightning_strike', name: 'lightning', pwr: 1, img: 'lightning.svg', lvl: 1 },
+        { id: 'fireball_strike', name: 'fireball', pwr: 3, img: 'fireball.png', lvl: 2 }
+    ]
+}
+
+function child(querySelector) {
+    const children = Array.from(this.children);
+    return children.find(c => c.classList.contains(querySelector));
+}
 
 function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
@@ -16,7 +48,7 @@ function generateRandomInteger(max) {
     return Math.floor(Math.random() * max) + 1;
 }
 let villainCurrentHp = 100;
-let hitTheVillain = () => {
+let hitTheVillain = (atk) => {
     let boonStart = {
         opacity: 100
     };
@@ -24,18 +56,24 @@ let hitTheVillain = () => {
         opacity: 0
     };
     let options = { "duration": 1500 };
-    let attackDmg = Math.round(getRandomArbitrary(10, 30) * generateRandomInteger(2));
+    let attackDmg = Math.round(getRandomArbitrary(10, 30) * generateRandomInteger(atk));
     dmgDone(attackDmg, true);
-    boom.animate([boonStart, boonEnd], options).onfinish = () => {
+    powerHitImg.animate([boonStart, boonEnd], options).onfinish = () => {
         dmg.classList.remove('show');
         dmgDone(0);
         heroBarToggle(true);
     };
-    lightning.classList.remove("show");
+    power.classList.remove("show");
     villainCurrentHp = (villainCurrentHp - attackDmg) < 0 ? 0 : villainCurrentHp - attackDmg;
     setVillainHp(villainCurrentHp);
     if (villainCurrentHp === 0) {
         heroBarToggle();
+        heroObject.xp++;
+
+        if (heroObject.xp >= 5 && heroObject.lvl === 1) {
+            heroObject.lvl++
+        }
+
         setTimeout(() => villainDead(), 1500);
     }
 }
@@ -70,23 +108,23 @@ let heroBarToggle = (attackDone = false) => {
     }
 }
 
-let attack = () => {
+let attack = (action) => {
     heroBarToggle();
     let start = { "left": "340px" };
     let end = { "left": `calc( 90vw - ${(villain.clientWidth / 2)}px )` }
     let options = { "duration": 2000, easing: 'cubic-bezier(0.37, 0, 0.63, 1)' };
-    lightning.classList.add("show");
+    power.setAttribute('src', action.img);
+    power.classList.add("show");
     setTimeout(() => {
-        lightning.animate([start, end], options).onfinish = hitTheVillain;
+        power.animate([start, end], options).onfinish = function () {
+            hitTheVillain(action.pwr);
+        };
     }, 510);
 }
 
 let reset = () => {
     setTimeout(() => {
-        heroBarToggle(true);
-        setVillainHp(100);
-        win.classList.remove('show');
-        villainContainer.classList.remove('hide');
+        StartGame();
     }, 1000);
 }
 
@@ -104,3 +142,73 @@ let dmgDone = (value, show = false) => {
     }
     dmg.innerHTML = value;
 }
+
+const renderStatus = (hero, container) => {
+    console.log({ hero, container });
+    let displayString = '';
+    Object.keys(hero).forEach(k => {
+        let status = hero[k];
+        if (k === 'actions') {
+            status = '';
+            hero[k].map(action => {
+                status += `<img src="${action.img}" style="height:30px;width:30px;margin-right:5px"/>`;
+            })
+        }
+
+        if (labels[k]) {
+            displayString += `<b>${labels[k]}</b> : ${status} <br/>`
+        }
+    })
+    console.log({ displayString });
+    container.innerHTML = displayString;
+}
+const setHeroDisplayName = (heroName, container) => {
+    container.innerHTML = heroName;
+}
+
+const toogleDisplay = () => {
+    heroStatusDisplay.toggle();
+}
+
+const manageHeroInfo = () => {
+    heroStatus.addEventListener('click', toogleDisplay, false);
+    renderStatus(heroObject, child.apply(heroStatusDisplay, ['hero-status']));
+
+    const displayHeader = child.apply(heroStatusDisplay, ['hero-status-display-header']);
+    setHeroDisplayName(heroObject.name, child.apply(displayHeader, ['hero-name']));
+    (child.apply(displayHeader, ['btn-close'])).addEventListener('click', toogleDisplay, false);
+}
+
+const manageHeroAtacks = () => {
+    const actions = heroObject.actions;
+    const makeAtack = attack;
+    actions.map(action => {
+        const exists = !!(child.apply(heroBar, [action.id]));
+        if (exists || heroObject.lvl < action.lvl) {
+            return;
+        }
+
+        let atkElement = document.createElement("a");
+        atkElement.href = 'javascrit:void;'
+        atkElement.innerHTML = `<img src="${action.img}" />`;
+        atkElement.classList.add(`btn`);
+        atkElement.classList.add(`btn-action`);
+        atkElement.classList.add(`${action.id}`);
+        atkElement.action = action
+        atkElement.addEventListener('click', function (e) {
+            makeAtack(this.action)
+        }, false);
+        heroBar.appendChild(atkElement);
+    })
+}
+
+const StartGame = () => {
+    manageHeroInfo();
+    manageHeroAtacks();
+    heroBarToggle(true);
+    setVillainHp(100);
+    win.classList.remove('show');
+    villainContainer.classList.remove('hide');
+}
+
+window.addEventListener('load', StartGame, false);

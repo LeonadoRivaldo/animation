@@ -11,10 +11,25 @@ let heroBar = document.querySelector("#hero-atcks");
 let heroStatus = document.querySelector("#hero-status");
 let heroStatusDisplay = document.querySelector("#hero-status-display");
 let heroXpBar = document.querySelector("#xp-bar");
+let autoAtack = document.querySelector("#auto-atack");
 let atckSpeed = 2000;
+let lastAtckMade;
 heroStatusDisplay.toggle = function () {
     !this.classList.contains('show') ? !this.classList.add('show') : !this.classList.remove('show');
 }
+heroBar.blockAtacks = function (attackDone) {
+    const atacksContainer = child.apply(this.children.item(0), ['btns']);
+    if (attackDone) {
+        atacksContainer.style.pointerEvents = null;
+        atacksContainer.style.opacity = 1;
+    } else {
+        atacksContainer.style.pointerEvents = 'none';
+        atacksContainer.style.opacity = 0.5;
+    }
+}
+autoAtack.addEventListener('change', (event) => {
+    autoAtackAction(lastAtckMade || heroObject.actions[0]);
+});
 
 const xpTable = {
     '1': 5,
@@ -39,9 +54,40 @@ const heroObject = {
     lvl: 1,
     actions: [
         { id: 'lightning_strike', name: 'lightning', pwr: 1, img: 'lightning.svg', lvl: 1 },
-        { id: 'fireball_strike', name: 'fireball', pwr: 3, img: 'fireball.png', lvl: 2 }
+        { id: 'fireball_strike', name: 'fireball', pwr: 3, img: 'fireball.png', lvl: 2 },
+        { id: 'windStrike_strike', name: 'windStrike', pwr: 5, img: 'wind.png', lvl: 3 }
     ]
 }
+
+const enimies = [
+    {
+        name: 'villain',
+        str: 5,
+        dex: 2,
+        con: 1,
+        lvl: 1,
+        avatar: 'enimies/villain.svg',
+        actions: []
+    },
+    {
+        name: 'troll',
+        str: 5,
+        dex: 2,
+        con: 2,
+        lvl: 2,
+        avatar: 'enimies/troll.png',
+        actions: []
+    },
+    {
+        name: 'demon',
+        str: 5,
+        dex: 2,
+        con: 5,
+        lvl: 3,
+        avatar: 'enimies/demon.jpg',
+        actions: []
+    }
+]
 
 function child(querySelector) {
     const children = Array.from(this.children);
@@ -55,7 +101,7 @@ function generateRandomInteger(max) {
     return Math.floor(Math.random() * max) + 1;
 }
 let villainCurrentHp = 100;
-let hitTheVillain = (atk) => {
+let hitTheVillain = (action) => {
     let boonStart = {
         opacity: 100
     };
@@ -63,7 +109,7 @@ let hitTheVillain = (atk) => {
         opacity: 0
     };
     let options = { "duration": (atckSpeed / heroObject.dex) };
-    let attackDmg = Math.round(getRandomArbitrary(10, 30) * generateRandomInteger(atk));
+    let attackDmg = Math.round(getRandomArbitrary(10, 30) * generateRandomInteger(action.pwr));
     dmgDone(attackDmg, true);
     powerHitImg.animate([boonStart, boonEnd], options).onfinish = () => {
         dmg.classList.remove('show');
@@ -75,6 +121,8 @@ let hitTheVillain = (atk) => {
             heroBarToggle();
             calcHeroXp(villainCurrentHp);
             setTimeout(() => villainDead());
+        } else {
+            autoAtackAction(action);
         }
     };
 }
@@ -111,16 +159,10 @@ let villainDead = () => {
 }
 
 let heroBarToggle = (attackDone = false) => {
-    if (attackDone) {
-        heroBar.style.pointerEvents = null;
-        heroBar.style.opacity = 1;
-    } else {
-        heroBar.style.pointerEvents = 'none';
-        heroBar.style.opacity = 0.5;
-    }
+    heroBar.blockAtacks(attackDone);
 }
-
 let attack = (action) => {
+    lastAtckMade = action;
     heroBarToggle();
     let start = { "left": "340px" };
     let end = { "left": `calc( 90vw - ${(villain.clientWidth / 2)}px )` }
@@ -130,9 +172,15 @@ let attack = (action) => {
     setTimeout(() => {
         power.animate([start, end], options).onfinish = function () {
             power.classList.remove("show");
-            hitTheVillain(action.pwr);
+            hitTheVillain(action);
         };
     }, 510);
+}
+let autoAtackAction = (action) => {
+    const { checked } = autoAtack;
+    if (checked) {
+        attack(action)
+    }
 }
 
 let reset = () => {
@@ -214,12 +262,19 @@ const manageHeroAtacks = () => {
         atacksContainer.appendChild(atkElement);
     })
 }
+const findEnemyByLvl = (lvl) => enimies.find(e => e.lvl === lvl);
+const manageEnimies = () => {
+    const enemy = findEnemyByLvl(heroObject.lvl);
+    setVillainHp((100 + (10 * enemy.con)));
+    villain.setAttribute('src', enemy.avatar);
+}
 
 const StartGame = () => {
+    manageEnimies();
     manageHeroInfo();
     manageHeroAtacks();
+    autoAtackAction(lastAtckMade);
     heroBarToggle(true);
-    setVillainHp(1);
     calcHeroXp();
     win.classList.remove('show');
     villainContainer.classList.remove('hide');

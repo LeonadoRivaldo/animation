@@ -11,4 +11,4 @@
 
 To see the hero exercises go to
 
-- [hero](https://leonadorivaldo.github.io/animation/hero/hero.html)
+- [hero](https://leonadorivaldo.github.io/animation/hero/index.html)

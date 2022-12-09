@@ -2,9 +2,11 @@
 let hero = document.querySelector("#hero");
 let villain = document.querySelector("#villain");
 let power = document.querySelector("#power");
-let powerHitImg = document.querySelector("#boom");
+let visualEffect = document.querySelector("#visual-effect");
 let villainHp = document.querySelector("#villain-container .hp-bar");
+let villainHpContainer = document.querySelector("#villain-container .hp-bar-container");
 let villainContainer = document.querySelector("#villain-container");
+let heroContainer = document.querySelector("#hero-container");
 let win = document.querySelector("#win");
 let dmg = document.querySelector("#dmg-done");
 let heroBar = document.querySelector("#hero-atcks");
@@ -12,13 +14,86 @@ let heroStatus = document.querySelector("#hero-status");
 let heroStatusDisplay = document.querySelector("#hero-status-display");
 let heroXpBar = document.querySelector("#xp-bar");
 let autoAtack = document.querySelector("#auto-atack");
+
+let footer = document.querySelector("#footer");
+let infoToggler = document.querySelector('#footer .infos-toggler');
+let footerInfo = document.querySelector("#footer #info");
+
 let atckSpeed = 2000;
 let lastAtckMade;
-heroStatusDisplay.toggle = function () {
-    !this.classList.contains('show') ? !this.classList.add('show') : !this.classList.remove('show');
+let enemyTotalHp;
+let enemyCurrentHp;
+let currentEnemy;
+
+
+function getAbsoluteHeight(el) {
+    // Get the DOM Node if you pass in a string
+    el = !el ? this : ((typeof el === 'string') ? document.querySelector(el) : el);
+
+    const styles = window.getComputedStyle(el);
+    const margin = parseFloat(styles['marginTop']) + parseFloat(styles['marginBottom']);
+    return Math.ceil(el.offsetHeight + margin);
+}
+
+villainHpContainer.getAbsoluteHeight = getAbsoluteHeight;
+dmg.getAbsoluteHeight = getAbsoluteHeight;
+footer.status = 'closed';
+footer.changeStatus = function () {
+    if (this.status === 'closed') {
+        this.status = 'open';
+        return;
+    }
+
+    this.status = 'closed';
+}
+footer.toggle = function () {
+    const initialHeight = '30px';
+    const finalHeight = '100px';
+    const footerAnimationStart = {
+        height: initialHeight
+    };
+    const footerAnimationEnd = {
+        height: finalHeight
+    };
+    const options = { 'duration': 500 };
+    const footerAnimationKF = [footerAnimationStart, footerAnimationEnd];
+
+    if (this.status === 'open') {
+        footerAnimationKF.reverse();
+    }
+
+    this.animate(footerAnimationKF, options).onfinish = () => {
+        this.changeStatus();
+        this.style.height = this.status === 'closed' ? initialHeight : finalHeight;
+        infoToggler.toggle();
+        footerInfo.toggle();
+    };
+}
+
+function child(querySelector) {
+    const children = Array.from(this.children);
+    return children.find(c => c.classList.contains(querySelector));
+}
+
+function toogleClass(classToToggle) {
+    !this.classList.contains(classToToggle) ? !this.classList.add(classToToggle) : !this.classList.remove(classToToggle)
+}
+function toogleContainer() {
+    toogleClass.call(this, 'show');
+}
+function setImgAssetSRC(image) {
+    this.setAttribute('src', image)
+}
+
+heroStatusDisplay.toggle = toogleContainer;
+footerInfo.toggle = function () {
+    toogleContainer.call(this);
+};
+infoToggler.toggle = function () {
+    toogleClass.call(this, 'bi-chevron-up');
 }
 heroBar.blockAtacks = function (attackDone) {
-    const atacksContainer = child.apply(this.children.item(0), ['btns']);
+    const atacksContainer = child.call(this.children.item(0), 'btns');
     if (attackDone) {
         atacksContainer.style.pointerEvents = null;
         atacksContainer.style.opacity = 1;
@@ -27,118 +102,79 @@ heroBar.blockAtacks = function (attackDone) {
         atacksContainer.style.opacity = 0.5;
     }
 }
-autoAtack.addEventListener('change', (event) => {
-    autoAtackAction(lastAtckMade || heroObject.actions[0]);
-});
+autoAtack.addEventListener('change', (event) => autoAtackAction(lastAtckMade || HERO.actions[0]));
+infoToggler.addEventListener('click', () => footer.toggle());
 
-const xpTable = {
-    '1': 5,
-    '2': 10,
-    '3': 30,
-    '4': 90
-}
-const labels = {
-    str: 'STR',
-    dex: 'DEX',
-    con: 'CON',
-    xp: 'XP',
-    lvl: 'Level',
-    actions: 'Powers'
-}
-const heroObject = {
-    name: 'Redhead Wich',
-    str: 2,
-    dex: 4,
-    con: 1,
-    xp: 0,
-    lvl: 1,
-    actions: [
-        { id: 'lightning_strike', name: 'lightning', pwr: 1, img: 'lightning.svg', lvl: 1 },
-        { id: 'fireball_strike', name: 'fireball', pwr: 3, img: 'fireball.png', lvl: 2 },
-        { id: 'windStrike_strike', name: 'windStrike', pwr: 5, img: 'wind.png', lvl: 3 }
-    ]
-}
+villain.setDisplayImg = setImgAssetSRC;
+power.setDisplayImg = setImgAssetSRC;
+visualEffect.setDisplayImg = setImgAssetSRC;
 
-const enimies = [
-    {
-        name: 'villain',
-        str: 5,
-        dex: 2,
-        con: 1,
-        lvl: 1,
-        avatar: 'enimies/villain.svg',
-        actions: []
-    },
-    {
-        name: 'troll',
-        str: 5,
-        dex: 2,
-        con: 2,
-        lvl: 2,
-        avatar: 'enimies/troll.png',
-        actions: []
-    },
-    {
-        name: 'demon',
-        str: 5,
-        dex: 2,
-        con: 5,
-        lvl: 3,
-        avatar: 'enimies/demon.jpg',
-        actions: []
-    }
-]
-
-function child(querySelector) {
-    const children = Array.from(this.children);
-    return children.find(c => c.classList.contains(querySelector));
+const findEnemyByLvl = (lvl) => ENIMIES.find(e => e.lvl === lvl);
+const calcTotalDiceRoll = (diceString) => makeDiceRoll(diceString).reduce((prev, next) => prev += next)
+const calcHp = (char) => {
+    const diceString = `${char.lvl}${char.hitDice}`;
+    let totalHp = calcTotalDiceRoll(diceString);
+    totalHp += (char.con * char.lvl);
+    return totalHp;
 }
-
-function getRandomArbitrary(min, max) {
-    return Math.random() * (max - min) + min;
+const calcDmg = (atackDmgDice) => {
+    return calcTotalDiceRoll(atackDmgDice);
 }
-function generateRandomInteger(max) {
-    return Math.floor(Math.random() * max) + 1;
+const calcHeroAtackRoll = (hero) => {
+    return Dices.d20() + hero.int;
 }
-let villainCurrentHp = 100;
-let hitTheVillain = (action) => {
-    let boonStart = {
-        opacity: 100
-    };
-    let boonEnd = {
-        opacity: 0
-    };
-    let options = { "duration": (atckSpeed / heroObject.dex) };
-    let attackDmg = Math.round(getRandomArbitrary(10, 30) * generateRandomInteger(action.pwr));
+const hitTheVillain = (action) => {
+    let attackDmg = calcDmg(action.dice);
     dmgDone(attackDmg, true);
-    powerHitImg.animate([boonStart, boonEnd], options).onfinish = () => {
-        dmg.classList.remove('show');
+    visualEffectAnimation(VISSUAL_EFFECTS.hit, () => {
         dmgDone(0);
         heroBarToggle(true);
-        villainCurrentHp = (villainCurrentHp - attackDmg) < 0 ? 0 : villainCurrentHp - attackDmg;
-        setVillainHp(villainCurrentHp);
-        if (villainCurrentHp === 0) {
+        enemyCurrentHp = (enemyCurrentHp - attackDmg) < 0 ? 0 : enemyCurrentHp - attackDmg;
+        setVillainHp(enemyCurrentHp);
+        if (enemyCurrentHp === 0) {
             heroBarToggle();
-            calcHeroXp(villainCurrentHp);
+            calcHeroXp(enemyCurrentHp);
             setTimeout(() => villainDead());
         } else {
             autoAtackAction(action);
         }
+    });
+}
+const visualEffectAnimation = (effect, callback) => {
+    if (!effect || !callback) {
+        return;
+    }
+
+    // SET EFFECT TO BE DISPLAYED
+    visualEffect.setDisplayImg(effect);
+
+    let vissualEffectAnimationStart = {
+        opacity: 100
     };
+    let vissualEffectAnimationEnd = {
+        opacity: 0
+    };
+    let vissualEffectAnimationOptions = { "duration": (atckSpeed / HERO.dex), "delay": 100 };
+
+    const animationsFrames = [vissualEffectAnimationStart, vissualEffectAnimationEnd];
+
+    // Animation
+    visualEffect.animate(animationsFrames, vissualEffectAnimationOptions).onfinish = callback;
+
 }
-let calcHeroXp = (villainCurrentHp) => {
+const calcHeroXp = (villainCurrentHp) => {
     if (villainCurrentHp === 0) {
-        heroObject.xp++;
+        HERO.xp++;
     }
-    barSize = Math.floor((heroObject.xp / xpTable[heroObject.lvl]) * 100);
+    barSize = Math.floor((HERO.xp / XP_TABLE[HERO.lvl]) * 100);
     heroXpBar.style.width = `${barSize}%`;
-    heroXpBar.innerHTML = `${heroObject.xp} XP`;
-    if (heroObject.xp >= xpTable[heroObject.lvl]) {
-        heroObject.xp = 0;
-        heroObject.lvl++
+    heroXpBar.innerHTML = `${HERO.xp} XP`;
+    if (HERO.xp >= XP_TABLE[HERO.lvl]) {
+        HERO.xp = 0;
+        HERO.lvl++
     }
 }
-let villainDead = () => {
+const villainDead = () => {
     let effectOpacity100 = {
         opacity: 100
     };
@@ -157,45 +193,52 @@ let villainDead = () => {
         }, 3000);
     };
 }
-
-let heroBarToggle = (attackDone = false) => {
+const heroBarToggle = (attackDone = false) => {
     heroBar.blockAtacks(attackDone);
 }
-let attack = (action) => {
+const attack = (action) => {
     lastAtckMade = action;
     heroBarToggle();
     let start = { "left": "340px" };
     let end = { "left": `calc( 90vw - ${(villain.clientWidth / 2)}px )` }
-    let options = { "duration": (atckSpeed / heroObject.dex), easing: 'cubic-bezier(0.37, 0, 0.63, 1)' };
-    power.setAttribute('src', action.img);
+    let options = { "duration": (atckSpeed / HERO.dex), easing: 'cubic-bezier(0.37, 0, 0.63, 1)' };
+    power.setDisplayImg(action.img)
     power.classList.add("show");
     setTimeout(() => {
         power.animate([start, end], options).onfinish = function () {
             power.classList.remove("show");
-            hitTheVillain(action);
+            if (calcHeroAtackRoll(HERO) >= currentEnemy.ca) {
+                hitTheVillain(action);
+            } else {
+                dmgDone('miss', true);
+                visualEffectAnimation(VISSUAL_EFFECTS.miss, () => {
+                    heroBarToggle(true);
+                    dmgDone(0);
+                })
+            }
         };
     }, 510);
 }
-let autoAtackAction = (action) => {
+const autoAtackAction = (action) => {
     const { checked } = autoAtack;
     if (checked) {
         attack(action)
     }
 }
-
-let reset = () => {
+const reset = () => {
     setTimeout(() => {
         StartGame();
     }, 1000);
 }
+const setVillainHp = (hp) => {
+    enemyCurrentHp = hp;
+    const barSize = Math.floor((enemyCurrentHp / enemyTotalHp) * 100);
 
-let setVillainHp = (hp) => {
-    villainCurrentHp = hp;
-    villainHp.style.width = `${hp > 0 ? hp : 0}%`;
-    villainHp.innerHTML = `${hp > 0 ? hp : 0}%`;
+    // end
+    villainHp.style.width = `${barSize > 0 ? barSize : 0}%`;
+    villainHp.innerHTML = `${enemyCurrentHp > 0 ? enemyCurrentHp : 0} HP`;
 }
-
-let dmgDone = (value, show = false) => {
+const dmgDone = (value, show = false) => {
     if (show) {
         dmg.classList.add('show');
     } else {
@@ -203,7 +246,6 @@ let dmgDone = (value, show = false) => {
     }
     dmg.innerHTML = value;
 }
-
 const renderStatus = (hero, container) => {
     let displayString = '';
     Object.keys(hero).forEach(k => {
@@ -215,8 +257,8 @@ const renderStatus = (hero, container) => {
             })
         }
 
-        if (labels[k]) {
-            displayString += `<b>${labels[k]}</b> : ${status} <br/>`
+        if (HERO_STATS_LABELS[k]) {
+            displayString += `<b>${HERO_STATS_LABELS[k]}</b> : ${status} <br/>`
         }
     })
     container.innerHTML = displayString;
@@ -224,27 +266,24 @@ const renderStatus = (hero, container) => {
 const setHeroDisplayName = (heroName, container) => {
     container.innerHTML = heroName;
 }
-
 const toogleDisplay = () => {
     heroStatusDisplay.toggle();
 }
-
 const manageHeroInfo = () => {
     heroStatus.addEventListener('click', toogleDisplay, false);
-    renderStatus(heroObject, child.apply(heroStatusDisplay, ['hero-status']));
+    renderStatus(HERO, child.call(heroStatusDisplay, 'hero-status'));
 
-    const displayHeader = child.apply(heroStatusDisplay, ['hero-status-display-header']);
-    setHeroDisplayName(heroObject.name, child.apply(displayHeader, ['hero-name']));
-    (child.apply(displayHeader, ['btn-close'])).addEventListener('click', toogleDisplay, false);
+    const displayHeader = child.call(heroStatusDisplay, 'hero-status-display-header');
+    setHeroDisplayName(HERO.name, child.call(displayHeader, 'hero-name'));
+    (child.call(displayHeader, 'btn-close')).addEventListener('click', toogleDisplay, false);
 }
-
 const manageHeroAtacks = () => {
-    const actions = heroObject.actions;
+    const atacksContainer = child.call(heroBar.children.item(0), 'btns');
+    const actions = HERO.actions;
     const makeAtack = attack;
     actions.map(action => {
-        const atacksContainer = child.apply(heroBar.children.item(0), ['btns']);
-        const exists = !!(child.apply(atacksContainer, [action.id]));
-        if (exists || heroObject.lvl < action.lvl) {
+        const exists = !!(child.call(atacksContainer, action.id));
+        if (exists || HERO.lvl < action.lvl) {
             return;
         }
 
@@ -261,14 +300,16 @@ const manageHeroAtacks = () => {
 
         atacksContainer.appendChild(atkElement);
     })
+    hero.style.height = `calc(100% - ${heroBar.clientHeight + 5}px )`;
 }
-const findEnemyByLvl = (lvl) => enimies.find(e => e.lvl === lvl);
 const manageEnimies = () => {
-    const enemy = findEnemyByLvl(heroObject.lvl);
-    setVillainHp((100 + (10 * enemy.con)));
-    villain.setAttribute('src', enemy.avatar);
+    currentEnemy = findEnemyByLvl(HERO.lvl);
+    enemyTotalHp = calcHp(currentEnemy);
+    setVillainHp(enemyTotalHp);
+    villain.setDisplayImg(currentEnemy.avatar);
+    const extraSize = villainHpContainer.getAbsoluteHeight() + dmg.getAbsoluteHeight();
+    villain.style.height = `calc(100% - ${extraSize + 5}px )`;
 }
-
 const StartGame = () => {
     manageEnimies();
     manageHeroInfo();

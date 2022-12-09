@@ -1,3 +1,7 @@
+:root {
+  --footer-size: 30px;
+}
+
 body {
   background-color: #a3d5d3;
   height: 100vh;
@@ -9,7 +13,8 @@ body {
   justify-content: space-between;
   align-items: center;
   overflow: hidden;
-  height: 100%;
+  height: calc(100vh - var(--footer-size));
+  padding: 10px 0;
 }
 #win {
   display: none;
@@ -18,16 +23,9 @@ body {
   display: block;
 }
 #hero {
-  /* position: absolute; */
-  /* top: 10px; */
-  /* left: 10px; */
-  height: 600px;
 }
 #villain {
-  /* position: absolute; */
-  /* top: 90px; */
-  /* left: 800px; */
-  height: 600px;
+  height: calc(100% - var(--footer-size));
 }
 #power {
   position: absolute;
@@ -35,17 +33,18 @@ body {
   left: 330px;
   width: 120px;
   transition: opacity 0.5s ease;
-  z-index: 1;
+  z-index: 2;
   transform: translateY(-10%);
   height: 120px;
 }
-#boom {
+#visual-effect {
   position: absolute;
-  right: -40px;
-  width: 570px;
-  top: 150px;
-  transform: rotate(-35deg);
+  right: -10px;
+  width: 100%;
+  top: 50%;
   opacity: 0;
+  z-index: 1;
+  transform: translateY(-50%);
 }
 .hide {
   opacity: 0;
@@ -59,13 +58,21 @@ body {
   display: flex;
   position: relative;
   justify-content: center;
-  width: 492px;
   flex-wrap: wrap;
 }
 #villain-container {
   position: relative;
-  margin-right: 50px;
+  margin-right: 20px;
+  max-width: 50%;
+  max-width: 50vw;
+  max-width: fit-content;
 }
+
+.character-container {
+  max-width: 492px;
+  width: 40vw;
+}
+
 .btn-action {
   display: block;
   border: 0;
@@ -86,10 +93,6 @@ body {
 }
 
 #hero-atcks {
-  /* display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center; */
 }
 
 #hero-status-display {
@@ -101,4 +104,19 @@ body {
 #hero-status-display .icon {
   height: 20px;
   width: 20px;
+}
+
+#footer {
+  height: var(--footer-size);
+}
+
+#footer #info {
+  height: 100%;
+  overflow: hidden;
+  overflow-y: auto;
+}
+#footer .infos-toggler .text {
+  padding-left: 5px;
+  height: 16px;
+  line-height: 1;
 }

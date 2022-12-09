@@ -319,6 +319,7 @@ const StartGame = () => {
     calcHeroXp();
     win.classList.remove('show');
     villainContainer.classList.remove('hide');
+    screen.orientation.lock('portrait').then(alert).catch(alert);
 }
 
 window.addEventListener('load', StartGame, false);
